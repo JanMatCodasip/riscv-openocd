@@ -1828,6 +1828,8 @@ static int riscv013_hart_count(struct target *target)
 
 static unsigned riscv013_data_bits(struct target *target)
 {
+	// TODO TODO TODO
+#if 0
 	RISCV013_INFO(info);
 	/* TODO: Once there is a spec for discovering abstract commands, we can
 	 * take those into account as well.  For now we assume abstract commands
@@ -1845,7 +1847,7 @@ static unsigned riscv013_data_bits(struct target *target)
 		return 16;
 	if (get_field(info->sbcs, DMI_SBCS_SBACCESS8))
 		return 8;
-
+#endif
 	return riscv_xlen(target);
 }
 
@@ -3190,25 +3192,51 @@ static int read_memory_progbuf(struct target *target, target_addr_t address,
 static int read_memory(struct target *target, target_addr_t address,
 		uint32_t size, uint32_t count, uint8_t *buffer)
 {
+	unsigned i;
+	int ret = ERROR_OK;
 	RISCV013_INFO(info);
-	if (info->progbufsize >= 2 && !riscv_prefer_sba)
-		return read_memory_progbuf(target, address, size, count, buffer);
 
-	if ((get_field(info->sbcs, DMI_SBCS_SBACCESS8) && size == 1) ||
-			(get_field(info->sbcs, DMI_SBCS_SBACCESS16) && size == 2) ||
-			(get_field(info->sbcs, DMI_SBCS_SBACCESS32) && size == 4) ||
-			(get_field(info->sbcs, DMI_SBCS_SBACCESS64) && size == 8) ||
-			(get_field(info->sbcs, DMI_SBCS_SBACCESS128) && size == 16)) {
-		if (get_field(info->sbcs, DMI_SBCS_SBVERSION) == 0)
-			return read_memory_bus_v0(target, address, size, count, buffer);
-		else if (get_field(info->sbcs, DMI_SBCS_SBVERSION) == 1)
-			return read_memory_bus_v1(target, address, size, count, buffer);
+	for (i = 0; i < RISCV_NUM_MEM_ACCESS_METHODS; i++) {
+		int method = riscv_mem_access_methods[i];
+
+		if (method == RISCV_MEM_ACCESS_UNSPECIFIED)
+			break;
+		else if (method == RISCV_MEM_ACCESS_PROGBUF) {
+			/* TODO account for impebreak? */
+			if (info->progbufsize >= 2)
+				ret = read_memory_progbuf(target, address, size, count, buffer);
+			else
+				LOG_DEBUG("Skipping mem read via progbuf - insufficient progbuf size.");
+		}
+		else if (method == RISCV_MEM_ACCESS_SYSBUS) {
+			if ((get_field(info->sbcs, DMI_SBCS_SBACCESS8) && size == 1) ||
+					(get_field(info->sbcs, DMI_SBCS_SBACCESS16) && size == 2) ||
+					(get_field(info->sbcs, DMI_SBCS_SBACCESS32) && size == 4) ||
+					(get_field(info->sbcs, DMI_SBCS_SBACCESS64) && size == 8) ||
+					(get_field(info->sbcs, DMI_SBCS_SBACCESS128) && size == 16)) {
+
+				if (get_field(info->sbcs, DMI_SBCS_SBVERSION) == 0)
+					ret = read_memory_bus_v0(target, address, size, count, buffer);
+				else if (get_field(info->sbcs, DMI_SBCS_SBVERSION) == 1)
+					ret = read_memory_bus_v1(target, address, size, count, buffer);
+			}
+			else
+				LOG_DEBUG("Skipping mem read via system bus - unsupported access size.");
+		}
+		else if (method == RISCV_MEM_ACCESS_ABSTRACT) {
+			ret = read_memory_abstract(target, address, size, count, buffer);
+		}
+
+		LOG_DEBUG("%s to read memory via %s.",
+				(ret == ERROR_OK) ? "Succeeded" : "Failed",
+				(method == RISCV_MEM_ACCESS_PROGBUF) ? "program buffer" :
+				(method == RISCV_MEM_ACCESS_SYSBUS) ? "system bus" : "abstract access");
+
+		if (ret == ERROR_OK)
+			return ret;
 	}
-
-	if (info->progbufsize >= 2)
-		return read_memory_progbuf(target, address, size, count, buffer);
-
-	return read_memory_abstract(target, address, size, count, buffer);
+	LOG_DEBUG("Ran out of memory access methods.");
+	return ret;
 }
 
 static int write_memory_bus_v0(struct target *target, target_addr_t address,
@@ -3610,25 +3638,51 @@ error:
 static int write_memory(struct target *target, target_addr_t address,
 		uint32_t size, uint32_t count, const uint8_t *buffer)
 {
+	unsigned i;
+	int ret = ERROR_OK;
 	RISCV013_INFO(info);
-	if (info->progbufsize >= 2 && !riscv_prefer_sba)
-		return write_memory_progbuf(target, address, size, count, buffer);
 
-	if ((get_field(info->sbcs, DMI_SBCS_SBACCESS8) && size == 1) ||
-			(get_field(info->sbcs, DMI_SBCS_SBACCESS16) && size == 2) ||
-			(get_field(info->sbcs, DMI_SBCS_SBACCESS32) && size == 4) ||
-			(get_field(info->sbcs, DMI_SBCS_SBACCESS64) && size == 8) ||
-			(get_field(info->sbcs, DMI_SBCS_SBACCESS128) && size == 16)) {
-		if (get_field(info->sbcs, DMI_SBCS_SBVERSION) == 0)
-			return write_memory_bus_v0(target, address, size, count, buffer);
-		else if (get_field(info->sbcs, DMI_SBCS_SBVERSION) == 1)
-			return write_memory_bus_v1(target, address, size, count, buffer);
+	for (i = 0; i < RISCV_NUM_MEM_ACCESS_METHODS; i++) {
+		int method = riscv_mem_access_methods[i];
+
+		if (method == RISCV_MEM_ACCESS_UNSPECIFIED)
+			break;
+		else if (method == RISCV_MEM_ACCESS_PROGBUF) {
+			/* TODO account for impebreak? */
+			if (info->progbufsize >= 2)
+				ret = write_memory_progbuf(target, address, size, count, buffer);
+			else
+				LOG_DEBUG("Skipping mem write via progbuf - insufficient progbuf size.");
+		}
+		else if (method == RISCV_MEM_ACCESS_SYSBUS) {
+			if ((get_field(info->sbcs, DMI_SBCS_SBACCESS8) && size == 1) ||
+					(get_field(info->sbcs, DMI_SBCS_SBACCESS16) && size == 2) ||
+					(get_field(info->sbcs, DMI_SBCS_SBACCESS32) && size == 4) ||
+					(get_field(info->sbcs, DMI_SBCS_SBACCESS64) && size == 8) ||
+					(get_field(info->sbcs, DMI_SBCS_SBACCESS128) && size == 16)) {
+
+				if (get_field(info->sbcs, DMI_SBCS_SBVERSION) == 0)
+					ret = write_memory_bus_v0(target, address, size, count, buffer);
+				else if (get_field(info->sbcs, DMI_SBCS_SBVERSION) == 1)
+					ret = write_memory_bus_v1(target, address, size, count, buffer);
+			}
+			else
+				LOG_DEBUG("Skipping mem write via system bus - unsupported access size.");
+		}
+		else if (method == RISCV_MEM_ACCESS_ABSTRACT) {
+			ret = write_memory_abstract(target, address, size, count, buffer);
+		}
+
+		LOG_DEBUG("%s to write memory via %s.",
+				(ret == ERROR_OK) ? "Succeeded" : "Failed",
+				(method == RISCV_MEM_ACCESS_PROGBUF) ? "program buffer" :
+				(method == RISCV_MEM_ACCESS_SYSBUS) ? "system bus" : "abstract access");
+
+		if (ret == ERROR_OK)
+			return ret;
 	}
-
-	if (info->progbufsize >= 2)
-		return write_memory_progbuf(target, address, size, count, buffer);
-
-	return write_memory_abstract(target, address, size, count, buffer);
+	LOG_DEBUG("Ran out of memory access methods.");
+	return ret;
 }
 
 static int arch_state(struct target *target)

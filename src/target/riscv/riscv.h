@@ -24,6 +24,8 @@ struct riscv_program;
 
 # define PG_MAX_LEVEL 4
 
+#define RISCV_NUM_MEM_ACCESS_METHODS  3
+
 extern struct target_type riscv011_target;
 extern struct target_type riscv013_target;
 
@@ -33,6 +35,13 @@ extern struct target_type riscv013_target;
 typedef uint64_t riscv_reg_t;
 typedef uint32_t riscv_insn_t;
 typedef uint64_t riscv_addr_t;
+
+enum riscv_mem_access_method {
+	RISCV_MEM_ACCESS_UNSPECIFIED,
+	RISCV_MEM_ACCESS_PROGBUF,
+	RISCV_MEM_ACCESS_SYSBUS,
+	RISCV_MEM_ACCESS_ABSTRACT
+};
 
 enum riscv_halt_reason {
 	RISCV_HALT_INTERRUPT,
@@ -196,7 +205,7 @@ extern int riscv_command_timeout_sec;
 /* Wall-clock timeout after reset. Settable via RISC-V Target commands.*/
 extern int riscv_reset_timeout_sec;
 
-extern bool riscv_prefer_sba;
+extern int riscv_mem_access_methods[];
 
 extern bool riscv_enable_virtual;
 extern bool riscv_ebreakm;
