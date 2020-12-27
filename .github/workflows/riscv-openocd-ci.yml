@@ -4,14 +4,14 @@ on: [push]
 jobs:
 
   run-riscv-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
 
       - name: Checkout OpenOCD
         uses: actions/checkout@v2
 
       - name: Install required pkgs
-        run: sudo apt install libtool pkg-config autoconf automake libusb-1.0 libftdi1
+        run: sudo apt-get install libtool pkg-config autoconf automake libusb-1.0 libftdi1
 
       - name: Build OpenOCD
         run: |
