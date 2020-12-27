@@ -41,16 +41,15 @@ jobs:
           cd install/bin
           find . -name 'riscv32-*' | while read F; do ln -s $F $(echo $F | sed -e 's/riscv32/riscv64/'); done
 
-      - name: Update env. variables
-        run: |
-          echo "`pwd`/riscv-openocd-ci/work/install/bin" >> $GITHUB_PATH
-          echo "RISCV=`pwd`/riscv-openocd-ci/work/install/bin" >> $GITHUB_ENV
-
       - name: Checkout riscv-tests
-        # TODO
         run: |
           cd riscv-openocd-ci/work
           git clone https://github.com/riscv/riscv-tests.git --recursive
+
+      - name: Update env. variables
+        run: |
+          echo "`pwd`/riscv-openocd-ci/work/install/bin" >> $GITHUB_PATH
+          echo "RISCV=`pwd`/riscv-openocd-ci/work/install" >> $GITHUB_ENV
 
       - name: Run riscv-tests/debug
         # TODO: make all
