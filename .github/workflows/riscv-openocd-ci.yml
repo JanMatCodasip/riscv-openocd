@@ -53,6 +53,7 @@ jobs:
 
       - name: Run riscv-tests/debug
         # TODO: make all
+        id: run_tests
         run: |
           cd riscv-openocd-ci/work/riscv-tests/debug
           make -k || true
@@ -62,10 +63,19 @@ jobs:
           cd riscv-openocd-ci
           python3 process_test_results.py --log-dir work/riscv-tests/debug/logs --output-dir work/results
 
-      - name: Archive logs from the tests
-        # store logs also on failure
-        if: ${{ always() }}
+      - name: Store test results
+        if: steps.run_tests.outputs.exit_code == 0
         uses: actions/upload-artifact@v2
         with:
           name: test-results
           path: riscv-openocd-ci/work/results
+
+      - name: Collect code coverage
+        if: steps.run_tests.outputs.exit_code == 0
+        run: true
+        # TODO
+
+      - name: Store code coverage
+        if: steps.run_tests.outputs.exit_code == 0
+        run: true
+        # TODO
