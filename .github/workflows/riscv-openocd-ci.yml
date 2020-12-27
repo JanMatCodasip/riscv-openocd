@@ -7,13 +7,25 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
 
+      - name: Install required pkgs
+        run: sudo apt-get install libtool pkg-config autoconf automake libusb-1.0 libftdi1 gcov lcov device-tree-compiler
+
       - name: Checkout OpenOCD
         uses: actions/checkout@v2
-
-      - name: Install required pkgs
-        run: sudo apt-get install libtool pkg-config autoconf automake libusb-1.0 libftdi1
 
       - name: Build OpenOCD
         run: |
           cd riscv-openocd-ci
-          python3 build_openocd.py --src-dir ../ --install-dir install/
+          python3 build_openocd.py --src-dir ../ --install-dir work/install/ --coverage
+
+      - name: Checkout Spike
+        run: |
+          cd riscv-openocd-ci
+          mkdir work
+          cd work
+          git clone https://github.com/riscv/riscv-isa-sim.git --recursive
+
+      - name: Build Spike
+        run: |
+          cd riscv-openocd-ci
+          python3 build_spike.py --src-dir work/riscv-isa-sim --install-dir work/install/

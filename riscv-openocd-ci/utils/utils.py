@@ -42,7 +42,7 @@ def _stdout_manager(display_stdout=False, stdout_to_file=None, stdout_capture=Fa
 
 
 def run_cmd(args, cwd=None, timeout=None, display_stdout=True, stdout_to_file=None,
-            stdout_capture=False, suppress_info=False):
+            stdout_capture=False, suppress_info=False, display_stderr=True):
     from subprocess import check_call
     if cwd is None:
         cwd = os.getcwd()
@@ -55,7 +55,9 @@ def run_cmd(args, cwd=None, timeout=None, display_stdout=True, stdout_to_file=No
             info("  cwd: {}".format(cwd))
             if stdout_to_file:
                 info("  log file: {}".format(stdout_to_file))
-        return subprocess.run(args, check=True, cwd=cwd, stdout=stdout, stderr=None, timeout=timeout, encoding="utf-8")
+        return subprocess.run(args, check=True, cwd=cwd, stdout=stdout,
+                              stderr=None if display_stderr else subprocess.DEVNULL,
+                              timeout=timeout, encoding="utf-8")
 
 
 def git_apply_patch(patch_file, target_dir):

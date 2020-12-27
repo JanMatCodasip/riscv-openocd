@@ -1,5 +1,5 @@
 
-from utils.utils import MeasureTime, ChangeWorkdir, run_cmd, info_box
+from utils.utils import MeasureTime, ChangeWorkdir, run_cmd, info_box, check_dir_exists, check_file_exists
 import logging
 from logging import info
 from multiprocessing import cpu_count
@@ -10,47 +10,31 @@ import sys
 def parse_args():
     import argparse
     parser = argparse.ArgumentParser("Build Spike (RISC-V ISA Simulator) from local (checked-out) source code")
-    parser.add_argument("--src-dir", required=True, help="Directory where OpenOCD source code is located")
-    parser.add_argument("--install-dir", required=True, help="Directory where to install OpenOCD after the build")
+    parser.add_argument("--src-dir", required=True, help="Directory where Spike source code is located")
+    parser.add_argument("--install-dir", required=True, help="Directory where to install Spike after the build")
     return parser.parse_args()
 
 
-def build_spike(src_dir, install_dir, with_coverage=False):
-    assert os.path.isdir(src_dir)
-    with ChangeWorkdir(src_dir):
-        info_box("Bootstrapping OpenOCD ...")
-        run_cmd(["bash", "./bootstrap"])
-        info_box("Configuring OpenOCD ...")
-        configure_args = [
-            "--enable-remote-bitbang",
-            "--enable-jtag_vpi",
-            "--enable-ftdi",
-            "--prefix=" + install_dir
-        ]
-        if with_coverage:
-            configure_args += [
-                "CFLAGS=-O0 --coverage -fprofile-arcs -ftest-coverage",
-                "CXXFLAGS=-O0 --coverage -fprofile-arcs -ftest-coverage",
-                "LDFLAGS=-fprofile-arcs -lgcov"
-            ]
-        run_cmd(["bash", "./configure"] + configure_args)
-        if with_coverage:
-            # Need to patch OpenOCD source so that coverage is collected even if OpenOCD
-            # gets terminated by a signal.
-            patch_file = os.path.join(script_dir, "patches", "openocd_gcov_flush.patch")
-            git_apply_patch(patch_file, src_dir)
-        info_box("Building OpenOCD ...")
+def build_spike(src_dir, install_dir):
+    check_dir_exists(src_dir)
+    build_dir = os.path.join(src_dir, "build")
+    os.mkdir(build_dir)
+    with ChangeWorkdir(build_dir):
+        info_box("Configuring Spike ...")
+        run_cmd(["bash", "../configure", "--prefix=" + install_dir])
+        info_box("Building Spike ...")
         run_cmd(["make", "clean"])  # safety
         run_cmd(["make", "-j" + str(cpu_count())])
-        info_box("Installing OpenOCD ...")
+        info_box("Installing Spike ...")
         run_cmd(["make", "install"])
-        info_box("Finished build of OpenOCD. ")
+        info_box("Finished Spike build. ")
 
 
 def check_spike_runs(install_dir):
     spike_binary = os.path.join(install_dir, "bin", "spike")
-    assert os.path.isfile(spike_binary)
-    run_cmd([spike_binary, "--version"])
+    check_file_exists(spike_binary)
+    info("Checking that Spike runs")
+    run_cmd([spike_binary, "--help"], display_stderr=False)
 
 
 def main():
