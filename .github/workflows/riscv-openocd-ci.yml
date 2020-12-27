@@ -39,8 +39,20 @@ jobs:
           cd install/bin
           find . -name 'riscv32-*' | while read F; do ln -s $F $(echo $F | sed -e 's/riscv32/riscv64/'); done
 
-      - name: Checkout RISC-V tests
+      - name: Checkout riscv-tests
         # TODO
         run: |
           cd riscv-openocd-ci/work
           git clone https://github.com/riscv/riscv-tests.git --recursive
+
+      - name: Run riscv-tests/debug
+        # TODO: make all
+        run: |
+          cd riscv-openocd-ci/work/riscv-tests/debug
+          make -k || true
+
+      - name: Archive logs from the tests
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-logs
+          path: riscv-openocd-ci/work/riscv-tests/debug/logs
