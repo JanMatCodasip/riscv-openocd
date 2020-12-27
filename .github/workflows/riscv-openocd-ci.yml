@@ -4,12 +4,9 @@ jobs:
   run-riscv-tests:
     runs-on: ubuntu-20.04
     steps:
-      - name: Dummy step 1
-        run: true
-      - name: Dummy step 2
-        run: ls -l
       - name: Checkout OpenOCD
         uses: actions/checkout@v2
-      - name: Dummy step 3
-        run: ls -l
-
+      - name: Build OpenOCD
+        run: |
+          cd riscv-openocd-ci
+          python3 build_openocd.py --src-dir ../ --install-dir install/
