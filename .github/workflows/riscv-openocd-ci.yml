@@ -34,7 +34,7 @@ jobs:
         # TODO
         run: |
           cd riscv-openocd-ci/work
-          wget "https://buildbot.embecosm.com/job/riscv32-gcc-ubuntu1804/25/artifact/riscv32-embecosm-gcc-ubuntu1804-20201108.tar.gz"
+          wget --progress dot:mega "https://buildbot.embecosm.com/job/riscv32-gcc-ubuntu1804/25/artifact/riscv32-embecosm-gcc-ubuntu1804-20201108.tar.gz"
           tar -C install -xvf riscv32-embecosm-gcc-ubuntu1804-20201108.tar.gz --strip-components=1
           cd install/bin
           find . -name 'riscv32-*' | while read F; do ln -s $F $(echo $F | sed -e 's/riscv32/riscv64/'); done
@@ -43,4 +43,4 @@ jobs:
         # TODO
         run: |
           cd riscv-openocd-ci/work
-          git clone https://github.com/riscv/riscv-isa-sim.git --recursive
+          git clone https://github.com/riscv/riscv-tests.git --recursive
