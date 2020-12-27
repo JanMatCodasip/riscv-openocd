@@ -15,6 +15,16 @@ def parse_args():
     return parser.parse_args()
 
 
+def print_spike_rev(src_dir):
+    rev = git_revision_info(src_dir)
+    info_box("Spike revision")
+    info("Commit ID:   {}".format(rev["hash"]))
+    info("Subject:     {}".format(rev["subject"]))
+    info("Author:      {}".format(rev["author"]))
+    info("Author date: {}".format(rev["author_date"]))
+    info("Commit date: {}".format(rev["commit_date"]))
+
+
 def build_spike(src_dir, install_dir):
     check_dir_exists(src_dir)
     build_dir = os.path.join(src_dir, "build")
@@ -44,6 +54,7 @@ def main():
     args.src_dir = os.path.abspath(args.src_dir)
     args.install_dir = os.path.abspath(args.install_dir)
 
+    print_spike_rev(args.src_dir)
     build_spike(args.src_dir, args.install_dir)
     check_spike_runs(args.install_dir)
 

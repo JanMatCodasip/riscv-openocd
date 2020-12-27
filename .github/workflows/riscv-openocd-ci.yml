@@ -57,8 +57,15 @@ jobs:
           cd riscv-openocd-ci/work/riscv-tests/debug
           make -k || true
 
+      - name: Process test results
+        run: |
+          cd riscv-openocd-ci
+          python3 process_test_results.py --log-dir work/riscv-tests/debug/logs --output-dir work/results
+
       - name: Archive logs from the tests
+        # store logs also on failure
+        if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
-          name: test-logs
-          path: riscv-openocd-ci/work/riscv-tests/debug/logs
+          name: test-results
+          path: riscv-openocd-ci/work/results
