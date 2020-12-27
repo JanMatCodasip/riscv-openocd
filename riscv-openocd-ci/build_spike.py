@@ -1,5 +1,6 @@
 
-from utils.utils import MeasureTime, ChangeWorkdir, run_cmd, info_box, check_dir_exists, check_file_exists
+from utils.utils import MeasureTime, ChangeWorkdir, run_cmd, info_box, \
+    check_dir_exists, check_file_exists, git_revision_info
 import logging
 from logging import info
 from multiprocessing import cpu_count
