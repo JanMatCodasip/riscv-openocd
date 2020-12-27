@@ -8,7 +8,9 @@ jobs:
     steps:
 
       - name: Install required pkgs
-        run: sudo apt-get install libtool pkg-config autoconf automake libusb-1.0 libftdi1 lcov device-tree-compiler
+        run: |
+          sudo apt-get install libtool pkg-config autoconf automake libusb-1.0 libftdi1 lcov device-tree-compiler
+          sudo python3 -m pip install pexpect
 
       - name: Checkout OpenOCD
         uses: actions/checkout@v2
