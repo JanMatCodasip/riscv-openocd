@@ -1,0 +1,15 @@
+name: riscv-openocd-ci
+on: [push]
+jobs:
+  run-riscv-tests:
+    runs-on: ubuntu-2004
+    steps:
+      - name: Dummy step 1
+        run: true
+      - name: Dummy step 2
+        run: ls -l
+      - name: Checkout OpenOCD
+        uses: actions/checkout@v2
+      - name: Dummy step 3
+        run: ls -l
+
