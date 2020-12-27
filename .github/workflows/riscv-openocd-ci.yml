@@ -21,7 +21,7 @@ jobs:
       - name: Checkout Spike
         run: |
           cd riscv-openocd-ci
-          mkdir work
+          mkdir -p work
           cd work
           git clone https://github.com/riscv/riscv-isa-sim.git --recursive
 
