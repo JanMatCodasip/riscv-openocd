@@ -61,21 +61,27 @@ jobs:
       - name: Process test results
         run: |
           cd riscv-openocd-ci
-          python3 process_test_results.py --log-dir work/riscv-tests/debug/logs --output-dir work/results
+          python3 process_test_results.py --log-dir work/riscv-tests/debug/logs --output-dir work/results/logs
 
       - name: Store test results
         if: steps.run_tests.outputs.exit_code == 0
         uses: actions/upload-artifact@v2
         with:
           name: test-results
-          path: riscv-openocd-ci/work/results
+          path: riscv-openocd-ci/work/results/logs
 
-      - name: Collect code coverage
+      - name: Collect OpenOCD code coverage
+        id: collect_cov
         if: steps.run_tests.outputs.exit_code == 0
-        run: true
-        # TODO
+        run: |
+          cd riscv-openocd-ci
+          lcov --capture --directory work/riscv-openocd --output-file work/openocd-coverage.info
+          genhtml work/openocd-coverage.info --output-directory work/results/openocd-coverage
 
-      - name: Store code coverage
-        if: steps.run_tests.outputs.exit_code == 0
-        run: true
+      - name: Store OpenOCD code coverage
+        if: steps.collect_cov.outputs.exit_code == 0
+        uses: actions/upload-artifact@v2
+        with:
+          name: openocd-coverage
+          path: riscv-openocd-ci/work/results/openocd-coverage
         # TODO
