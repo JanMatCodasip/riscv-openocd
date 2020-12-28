@@ -75,8 +75,13 @@ jobs:
         if: steps.run_tests.outputs.exit_code == 0
         run: |
           cd riscv-openocd-ci
+          echo "1"
+          ls -l
+          echo "2"
           lcov --capture --directory work/riscv-openocd --output-file work/openocd-coverage.info
+          echo "3"
           genhtml work/openocd-coverage.info --output-directory work/results/openocd-coverage
+          echo "4"
 
       - name: Store OpenOCD code coverage
         if: steps.collect_cov.outputs.exit_code == 0
