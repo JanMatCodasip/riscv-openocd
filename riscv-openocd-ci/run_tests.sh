@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CHECKOUT_DIR=`pwd`/riscv-openocd-ci/work/riscv-isa-sim
+CHECKOUT_DIR=`pwd`/riscv-openocd-ci/work/riscv-tests
 
 # Fail on first error.
 set -e
