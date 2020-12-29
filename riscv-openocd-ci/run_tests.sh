@@ -14,7 +14,6 @@ cd "$CHECKOUT_DIR"
 git clone --recursive https://github.com/riscv/riscv-tests .
 
 # Run the debug tests.
-# Do not stop even if there is a failed test.
+# Do not stop even on a failed test.
 cd debug
-make -k || true
-
+make -k all || true

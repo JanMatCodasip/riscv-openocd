@@ -1,5 +1,5 @@
 
-
+from glob import glob
 import logging
 from logging import info
 from multiprocessing import cpu_count
@@ -7,14 +7,22 @@ import os
 import re
 import shutil
 import sys
-from utils.utils import MeasureTime, ChangeWorkdir, run_cmd, info_box, git_apply_patch, git_revision_info, \
-    check_file_exists, check_dir_exists
 
 KNOWN_RESULTS = ["pass", "fail", "not_applicable", "exception"]
-SUMMARY_FILE = "test_summary.txt"
+
+
+def info_box(msg):
+    """Display an emphasized message - print an ASCII box around it. """
+    box = " +==" + ("=" * len(msg)) + "==+"
+    info("")
+    info(box)
+    info(" |  " + msg + "  |")
+    info(box)
+    info("")
 
 
 def parse_args():
+    """Process command-line arguments. """
     import argparse
     parser = argparse.ArgumentParser("Process logs from riscv-tests/debug")
     parser.add_argument("--log-dir", required=True, help="Directory where logs from RISC-V debug tests are stored")
@@ -23,26 +31,35 @@ def parse_args():
 
 
 def process_test_logs(log_dir, output_dir):
-    from glob import glob
-    check_dir_exists(log_dir)
+    """Process all logs from the testing. """
+
+    assert os.path.isdir(log_dir)
     os.makedirs(output_dir, exist_ok=True)
 
     # process log files
     file_pattern = os.path.join(log_dir, "*.log")
-    res = []
-    for lf in sorted(glob(file_pattern)):
+    log_files = sorted(glob(file_pattern))
+
+    if not len(log_files):
+        # Did not find any *.log.
+        # Either the tests did not start at all or a wrong log directory was specified.
+        raise RuntimeError("No log files (*.log) in directory {}".format(log_dir))
+
+    tests = []
+    for lf in log_files:
         target, result = process_one_log(lf)
         copy_one_log(lf, result, output_dir)
-        res += [(lf, target, result)]
+        tests += [{"log": lf, "target": target, "result": result}]
 
-    any_failed = aggregate_results(res)
-    return any_failed
+    return tests
 
 
 def process_one_log(log_file):
-    check_file_exists(log_file)
+    """Parse a single log file, extract required pieces from it. """
+    assert os.path.isfile(log_file)
     target = None
     result = None
+    # Find target name and the test result in the log file
     for line in open(log_file, "r"):
         target_match = re.match(r"^Target: (\S+)$", line)
         if target_match is not None:
@@ -64,32 +81,43 @@ def process_one_log(log_file):
 
 
 def copy_one_log(log_file, result, output_dir):
-    # copy the log to an output sub-folder based on the result
+    """Copy the log to a sub-folder based on the result. """
     target_dir = os.path.join(output_dir, result)
     os.makedirs(target_dir, exist_ok=True)
     assert os.path.isdir(target_dir)
     shutil.copy2(log_file, target_dir)
 
 
-def aggregate_results(res):
+def print_aggregated_results(tests):
+    """Print the tests grouped by the result. Print also pass/fail/... counts."""
 
+    def _filter_tests(tests, target=None, result=None):
+        tests_out = tests
+        if target is not None:
+            tests_out = filter(lambda t: t["target"] == target, tests_out)
+        if result is not None:
+            tests_out = filter(lambda t: t["result"] == result, tests_out)
+        return list(tests_out)
+
+    # Print lists of passed/failed/... tests
     outcomes = {
-        "Passed tests" : "pass",
+        "Passed tests": "pass",
         "Not applicable tests": "not_applicable",
         "Failed tests": "fail",
         "Tests ended with exception": "exception",
     }
-
-    for caption, filter in outcomes.items():
+    for caption, result in outcomes.items():
         info_box(caption)
-        tests_filtered = [lf for lf, _, r in res if r == filter]
-        for lf in tests_filtered:
-            name = os.path.splitext(os.path.basename(lf))[0]
+        tests_filtered = _filter_tests(tests, result=result)
+        for t in tests_filtered:
+            name = os.path.splitext(os.path.basename(t["log"]))[0]
             info(name)
         if not tests_filtered:
             info("(none)")
 
-    target_names = set([t for (_, t, _) in res])
+    target_names = sorted(set([t["target"] for t in tests]))
+
+    # Print summary - passed/failed/... counts, for each target and total
 
     info_box("Summary")
 
@@ -100,20 +128,20 @@ def aggregate_results(res):
     _print_row("-----", "-----", "-----", "-----", "-----", "-----")
     sum_pass = sum_na = sum_fail = sum_exc = 0
     for tn in target_names:
-        t_pass = sum([1 for _, t, r in res if t == tn and r == "pass"])
-        t_na = sum([1 for _, t, r in res if t == tn and r == "not_applicable"])
-        t_fail = sum([1 for _, t, r in res if t == tn and r == "fail"])
-        t_exc = sum([1 for _, t, r in res if t == tn and r == "exception"])
-        t_sum = sum([1 for _, t, _ in res if t == tn])
-        assert t_sum == t_pass + t_na + t_fail + t_exc
+        t_pass = len(_filter_tests(tests, target=tn, result="pass"))
+        t_na = len(_filter_tests(tests, target=tn, result="not_applicable"))
+        t_fail = len(_filter_tests(tests, target=tn, result="fail"))
+        t_exc = len(_filter_tests(tests, target=tn, result="exception"))
+        t_sum = len(_filter_tests(tests, target=tn))
+        assert t_sum == t_pass + t_na + t_fail + t_exc  # self-check
         _print_row(tn, t_sum, t_pass, t_na, t_fail, t_exc)
         sum_pass += t_pass
         sum_na += t_na
         sum_fail += t_fail
         sum_exc += t_exc
-    assert len(res) == sum_pass + sum_na + sum_fail + sum_exc
+    assert len(tests) == sum_pass + sum_na + sum_fail + sum_exc  # self-check
     _print_row("-----", "-----", "-----", "-----", "-----", "-----")
-    _print_row("All targets:", len(res), sum_pass, sum_na, sum_fail, sum_exc)
+    _print_row("All targets:", len(tests), sum_pass, sum_na, sum_fail, sum_exc)
     _print_row("-----", "-----", "-----", "-----", "-----", "-----")
 
     any_failed = (sum_fail + sum_exc) > 0
@@ -123,11 +151,15 @@ def aggregate_results(res):
 def main():
     args = parse_args()
 
-    # use absolute paths
+    # Use absolute paths.
     args.log_dir = os.path.abspath(args.log_dir)
     args.output_dir = os.path.abspath(args.output_dir)
 
-    any_failed = process_test_logs(args.log_dir, args.output_dir)
+    # Process the log files and print results.
+    tests = process_test_logs(args.log_dir, args.output_dir)
+    any_failed = print_aggregated_results(tests)
+
+    # The overall exit code.
     return 1 if any_failed else 0
 
 

@@ -25,7 +25,7 @@ jobs:
         run: bash riscv-openocd-ci/download_toolchain.sh
 
       - name: Update env. variables
-        # change RISCV and PATH vars for subsequent steps
+        # Change RISCV and PATH env variables for subsequent steps.
         run: |
           echo "`pwd`/riscv-openocd-ci/work/install/bin" >> $GITHUB_PATH
           echo "RISCV=`pwd`/riscv-openocd-ci/work/install" >> $GITHUB_ENV
