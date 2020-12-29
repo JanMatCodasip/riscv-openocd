@@ -19,7 +19,8 @@ mkdir build
 cd build
 bash ../configure --prefix=$INSTALL_DIR
 make clean  # safety
-make -j`nproc`
+JOBS=$(($(nproc) + 2))
+make -j$JOBS
 make install
 
 # Check that Spike runs
