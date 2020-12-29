@@ -161,7 +161,7 @@ def main():
     # The overall exit code.
     exit_code = 1 if any_failed else 0
     if any_failed:
-        error("Encountered failed test(s). Exiting with non-zero return code.")
+        error("Encountered failed test(s). Exiting with non-zero code.")
     else:
         info("Success - no failed tests encountered.")
     return exit_code

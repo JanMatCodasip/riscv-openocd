@@ -31,6 +31,7 @@ jobs:
           echo "RISCV=`pwd`/riscv-openocd-ci/work/install" >> $GITHUB_ENV
 
       - name: Checkout & run riscv-tests
+        id: run_tests
         run: bash riscv-openocd-ci/run_tests.sh
 
       - name: Process test results
