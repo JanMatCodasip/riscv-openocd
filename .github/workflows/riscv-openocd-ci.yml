@@ -18,13 +18,9 @@ jobs:
       - name: Build OpenOCD
         run: bash riscv-openocd-ci/build_openocd.sh
 
-#      - name: Checkout Spike
-#        run: |
-#          cd riscv-openocd-ci
-#          mkdir -p work
-#          cd work
-#          git clone https://github.com/riscv/riscv-isa-sim.git --recursive
-#
+      - name: Checkout & build Spike
+        run: bash riscv-openocd-ci/build_spike.sh
+
 #      - name: Build Spike
 #        run: |
 #          cd riscv-openocd-ci
