@@ -16,70 +16,68 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build OpenOCD
-        run: |
-          cd riscv-openocd-ci
-          python3 build_openocd.py --src-dir ../ --install-dir work/install/ --coverage
+        run: bash riscv-openocd-ci/build_openocd.sh
 
-      - name: Checkout Spike
-        run: |
-          cd riscv-openocd-ci
-          mkdir -p work
-          cd work
-          git clone https://github.com/riscv/riscv-isa-sim.git --recursive
-
-      - name: Build Spike
-        run: |
-          cd riscv-openocd-ci
-          python3 build_spike.py --src-dir work/riscv-isa-sim --install-dir work/install/
-
-      - name: Download RISC-V toolchain
-        # TODO
-        run: |
-          cd riscv-openocd-ci/work
-          wget --progress dot:mega "https://buildbot.embecosm.com/job/riscv32-gcc-ubuntu1804/25/artifact/riscv32-embecosm-gcc-ubuntu1804-20201108.tar.gz"
-          tar -C install -xvf riscv32-embecosm-gcc-ubuntu1804-20201108.tar.gz --strip-components=1
-          cd install/bin
-          find . -name 'riscv32-*' | while read F; do ln -s $F $(echo $F | sed -e 's/riscv32/riscv64/'); done
-
-      - name: Checkout riscv-tests
-        run: |
-          cd riscv-openocd-ci/work
-          git clone https://github.com/riscv/riscv-tests.git --recursive
-
-      - name: Update env. variables
-        run: |
-          echo "`pwd`/riscv-openocd-ci/work/install/bin" >> $GITHUB_PATH
-          echo "RISCV=`pwd`/riscv-openocd-ci/work/install" >> $GITHUB_ENV
-
-      - name: Run riscv-tests/debug
-        # TODO: make all
-        id: run_tests
-        run: |
-          cd riscv-openocd-ci/work/riscv-tests/debug
-          make -k || true
-
-      - name: Process test results
-        run: |
-          cd riscv-openocd-ci
-          python3 process_test_results.py --log-dir work/riscv-tests/debug/logs --output-dir work/results/logs
-
-      - name: Store test results
-        if: steps.run_tests.outputs.exit_code == 0
-        uses: actions/upload-artifact@v2
-        with:
-          name: test-results
-          path: riscv-openocd-ci/work/results/logs
-
-      - name: Collect OpenOCD code coverage
-        id: collect_cov
-        if: steps.run_tests.outputs.exit_code == 0
-        run: |
-          lcov --capture --directory . --output-file riscv-openocd-ci/work/openocd-coverage.info
-          genhtml riscv-openocd-ci/work/openocd-coverage.info --output-directory riscv-openocd-ci/work/results/openocd-coverage
-
-      - name: Store OpenOCD code coverage
-        if: steps.collect_cov.outputs.exit_code == 0
-        uses: actions/upload-artifact@v2
-        with:
-          name: openocd-coverage
-          path: riscv-openocd-ci/work/results/openocd-coverage
+#      - name: Checkout Spike
+#        run: |
+#          cd riscv-openocd-ci
+#          mkdir -p work
+#          cd work
+#          git clone https://github.com/riscv/riscv-isa-sim.git --recursive
+#
+#      - name: Build Spike
+#        run: |
+#          cd riscv-openocd-ci
+#          python3 build_spike.py --src-dir work/riscv-isa-sim --install-dir work/install/
+#
+#      - name: Download RISC-V toolchain
+#        # TODO
+#        run: |
+#          cd riscv-openocd-ci/work
+#          wget --progress dot:mega "https://buildbot.embecosm.com/job/riscv32-gcc-ubuntu1804/25/artifact/riscv32-embecosm-gcc-ubuntu1804-20201108.tar.gz"
+#          tar -C install -xvf riscv32-embecosm-gcc-ubuntu1804-20201108.tar.gz --strip-components=1
+#          cd install/bin
+#          find . -name 'riscv32-*' | while read F; do ln -s $F $(echo $F | sed -e 's/riscv32/riscv64/'); done
+#
+#      - name: Checkout riscv-tests
+#        run: |
+#          cd riscv-openocd-ci/work
+#          git clone https://github.com/riscv/riscv-tests.git --recursive
+#
+#      - name: Update env. variables
+#        run: |
+#          echo "`pwd`/riscv-openocd-ci/work/install/bin" >> $GITHUB_PATH
+#          echo "RISCV=`pwd`/riscv-openocd-ci/work/install" >> $GITHUB_ENV
+#
+#      - name: Run riscv-tests/debug
+#        # TODO: make all
+#        id: run_tests
+#        run: |
+#          cd riscv-openocd-ci/work/riscv-tests/debug
+#          make -k || true
+#
+#      - name: Process test results
+#        run: |
+#          cd riscv-openocd-ci
+#          python3 process_test_results.py --log-dir work/riscv-tests/debug/logs --output-dir work/results/logs
+#
+#      - name: Store test results
+#        if: steps.run_tests.outputs.exit_code == 0
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: test-results
+#          path: riscv-openocd-ci/work/results/logs
+#
+#      - name: Collect OpenOCD code coverage
+#        id: collect_cov
+#        if: steps.run_tests.outputs.exit_code == 0
+#        run: |
+#          lcov --capture --directory . --output-file riscv-openocd-ci/work/openocd-coverage.info
+#          genhtml riscv-openocd-ci/work/openocd-coverage.info --output-directory riscv-openocd-ci/work/results/openocd-coverage
+#
+#      - name: Store OpenOCD code coverage
+#        if: steps.collect_cov.outputs.exit_code == 0
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: openocd-coverage
+#          path: riscv-openocd-ci/work/results/openocd-coverage
