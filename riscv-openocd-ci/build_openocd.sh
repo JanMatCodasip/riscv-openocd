@@ -29,8 +29,7 @@ git apply riscv-openocd-ci/patches/openocd_gcov_flush.patch
 
 # Build and install OpenOCD
 make clean  # safety
-JOBS=$(($(nproc) + 2))
-make -j$JOBS
+make -j`nproc`
 make install
 
 # Check that OpenOCD runs
