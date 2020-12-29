@@ -6,6 +6,9 @@ INSTALL_DIR=`pwd`/riscv-openocd-ci/work/install
 # Fail on first error.
 set -e
 
+# Echo commands.
+set -o xtrace
+
 # Checkout Spike.
 mkdir -p "$CHECKOUT_DIR"
 cd "$CHECKOUT_DIR"

@@ -5,7 +5,10 @@ INSTALL_DIR=`pwd`/riscv-openocd-ci/work/install
 # Fail on first error.
 set -e
 
-# Assuming OpenOCD source is already checked-out in the CWD.
+# Echo commands.
+set -o xtrace
+
+# Assuming OpenOCD source is already checked-out in the current workdir.
 
 ./bootstrap
 
