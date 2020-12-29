@@ -1,8 +1,7 @@
 
 from glob import glob
 import logging
-from logging import info
-from multiprocessing import cpu_count
+from logging import info, error
 import os
 import re
 import shutil
@@ -160,7 +159,12 @@ def main():
     any_failed = print_aggregated_results(tests)
 
     # The overall exit code.
-    return 1 if any_failed else 0
+    exit_code = 1 if any_failed else 0
+    if any_failed:
+        error("Encountered failed test(s). Exiting with non-zero return code.")
+    else:
+        info("Success - no failed tests encountered.")
+    return exit_code
 
 
 if __name__ == '__main__':

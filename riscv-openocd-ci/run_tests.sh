@@ -16,4 +16,4 @@ git clone --recursive https://github.com/riscv/riscv-tests .
 # Run the debug tests.
 # Do not stop even on a failed test.
 cd debug
-make -k all || true
+make -k -j`nproc` all || true
