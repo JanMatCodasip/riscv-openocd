@@ -40,6 +40,7 @@ jobs:
           python3 process_test_results.py --log-dir work/riscv-tests/debug/logs --output-dir work/results/logs
 
       - name: Store test results
+        # Run if tests were executed.
         if: steps.run_tests.outputs.exit_code == 0
         uses: actions/upload-artifact@v2
         with:
@@ -48,12 +49,14 @@ jobs:
 
       - name: Collect OpenOCD code coverage
         id: collect_cov
+        # Run if tests were executed.
         if: steps.run_tests.outputs.exit_code == 0
         run: |
           lcov --capture --directory . --output-file riscv-openocd-ci/work/openocd-coverage.info
           genhtml riscv-openocd-ci/work/openocd-coverage.info --output-directory riscv-openocd-ci/work/results/openocd-coverage
 
       - name: Store OpenOCD code coverage
+        # Run if coverage was collected.
         if: steps.collect_cov.outputs.exit_code == 0
         uses: actions/upload-artifact@v2
         with:
