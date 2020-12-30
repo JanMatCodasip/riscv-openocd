@@ -5,7 +5,7 @@ run [riscv-tests/debug](https://github.com/riscv/riscv-tests/tree/master/debug)
 against riscv-openocd. 
 
 The scripts are intended to be called automatically by Github
-Actions as means of testing & continuous integration for riscv-openocd.
+Actions as a means of testing & continuous integration for riscv-openocd.
 
 The scripts perform these actions:
 
@@ -17,4 +17,5 @@ The scripts perform these actions:
 - Process the test results
 - Collect code coverage for OpenOCD
 
-See [.github/workflows](.github/workflows) for an example of how this is used in practice. 
+See [.github/workflows](../.github/workflows) for an example of how this is 
+used in practice. 
