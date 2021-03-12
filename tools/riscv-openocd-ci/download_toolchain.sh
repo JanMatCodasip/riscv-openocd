@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TOOLCHAIN_URL="https://buildbot.embecosm.com/job/riscv32-gcc-ubuntu1804"
-TOOLCHAIN_URL+="/44/artifact/riscv32-embecosm-gcc-ubuntu1804-20210309.tar.gz"
+TOOLCHAIN_URL+="/47/artifact/riscv32-embecosm-gcc-ubuntu1804-20210309.tar.gz"
 ARCHIVE_NAME=${TOOLCHAIN_URL##*/}
 DOWNLOAD_DIR=`pwd`/tools/riscv-openocd-ci/work
 INSTALL_DIR=`pwd`/tools/riscv-openocd-ci/work/install
